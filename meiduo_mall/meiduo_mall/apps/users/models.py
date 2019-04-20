@@ -6,8 +6,8 @@ from django.db import models
 # 我们重写用户模型类,继承自AbstractUser
 class User(AbstractUser):
     """自定义用户模型类"""
-    # 在用户模型类中增加mobilephone字段
-    mobilephone = models.CharField(max_length=11, verbose_name='手机号', unique=True)
+    # 在用户模型类中增加mobile字段
+    mobile = models.CharField(max_length=11, verbose_name='手机号', unique=True)
 
     # 对当前表进行相关设置
     class Meta:
