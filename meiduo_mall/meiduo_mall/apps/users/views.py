@@ -1,6 +1,7 @@
 import re
 
 from django import http
+from django.contrib.auth import login
 from django.db import DatabaseError
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -22,6 +23,11 @@ class RegisterView(View):
         return render(request, 'register.html')
 
     def post(self, request):
+        """
+        实现用户注册
+        :param request:请求对象
+        :return:注册结果
+        """
         # 1.接收请求,提取参数
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -51,9 +57,13 @@ class RegisterView(View):
         # 3.保存注册数据
         try:
             # 调用create_user方法会对密码进行自动加密,如调用create方法,需手动加密
-            User.objects.create_user(username=username, password=password, mobile=mobile)
+            user = User.objects.create_user(username=username, password=password, mobile=mobile)
         except DatabaseError:
             return render(request, 'register.html', {'register_errmsg': '保存注册数据失败'})
+        # 实现状态保持
+        # login方法中封装了request.session[key] = value,可实现保存用户信息功能
+        # login方法必需两个参数,第一个request,第二个user.    create_user方法会返回user
+        login(request, user)
         # 4.响应注册结果
         # return http.HttpResponse('注册成功,应该跳转到首页')
         return redirect(reverse('contents:index'))
