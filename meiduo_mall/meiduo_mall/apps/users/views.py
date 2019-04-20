@@ -8,7 +8,42 @@ from django.urls import reverse
 from django.views import View
 
 # Create your views here.
+from meiduo_mall.utils.response_code import RETCODE
 from .models import User
+
+
+class MobileCountView(View):
+    """判断手机号是否重复注册"""
+
+    # /mobiles/(?P<mobile>1[3-9]\d{9})/count/
+    def get(self, request, mobile):
+        """
+        获取手机号,查询手机号在数据库中的个数并返回
+        :param request: 请求对象
+        :param mobile: 手机号
+        :return: JSON
+        """
+        # 去数据库中查询该手机号的个数
+        count = User.objects.filter(mobile=mobile).count()
+        # 返回状态码,错误信息和个数
+        return http.JsonResponse({'code': 'RETCODE.OK', 'errmsg': 'OK', 'count': count})
+
+
+class UsernameCountView(View):
+    """判断用户名是否重复注册"""
+
+    # / usernames / (?P < username >[a-zA-Z0-9_-]{5, 20}) / count /
+    def get(self, request, username):
+        """
+        获取用户名,查询用户名在数据库中的个数并返回
+        :param request: 请求对象
+        :param username: 用户名
+        :return: JSON
+        """
+        # 去数据库中查询该用户名的个数
+        count = User.objects.filter(username=username).count()
+        # 返回状态码,错误信息和个数
+        return http.JsonResponse({'code': 'RETCODE.OK', 'errmsg': 'OK', 'count': count})
 
 
 class RegisterView(View):
