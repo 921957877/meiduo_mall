@@ -11,6 +11,7 @@ from django_redis import get_redis_connection
 from meiduo_mall.libs.yuntongxun.ccp_sms import CCP
 from meiduo_mall.utils.response_code import RETCODE
 import logging
+
 logger = logging.getLogger('django')
 
 
@@ -23,6 +24,13 @@ class SMSCodeView(View):
         :param mobile: 手机号
         :return: JSON
         """
+        # 创建连接到redis的对象
+        redis_conn = get_redis_connection('verify_code')
+        # 避免频繁发送短信验证码
+        send_flag = redis_conn.get('send_flag_%s' % mobile)
+        if send_flag:
+            return http.JsonResponse({'code': RETCODE.THROTTLINGERR, 'errmsg': '发送短信过于频繁'})
+
         # 1.接收参数  查询字符串:request.GET  表单:request.POST
         # 获取客户端发送来的图形验证码
         image_code_client = request.GET.get('image_code')
@@ -30,10 +38,10 @@ class SMSCodeView(View):
         # 2.校验参数
         if not all([image_code_client, uuid]):
             return http.JsonResponse({'code': RETCODE.NECESSARYPARAMERR, 'errmsg': '缺少必传参数'})
-        # 3.创建连接到redis的对象
-        redis_conn = get_redis_connection('verify_code')
+
         # 4.获取暂存在redis中的图形验证码
         image_code_server = redis_conn.get('img_code_%s' % uuid)
+
         # 图形验证码过期或不存在
         if image_code_server is None:
             return http.JsonResponse({'code': RETCODE.IMAGECODEERR, 'errsmg': '图片验证码已失效'})
@@ -51,6 +59,7 @@ class SMSCodeView(View):
         logger.info(sms_code)
         # 8.暂存短信验证码到redis数据库,有效期为5分钟
         redis_conn.setex('sms_code_%s' % mobile, 300, sms_code)
+        redis_conn.setex('send_flag_%s' % mobile, 60, 1)
         # 9.发送短信验证码
         CCP().send_template_sms(mobile, [sms_code, 5], 1)
         # 10.响应结果
