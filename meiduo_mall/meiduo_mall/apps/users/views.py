@@ -10,6 +10,7 @@ from django.views import View
 # Create your views here.
 from meiduo_mall.utils.response_code import RETCODE
 from .models import User
+from django_redis import get_redis_connection
 
 
 class MobileCountView(View):
@@ -68,8 +69,8 @@ class RegisterView(View):
         password = request.POST.get('password')
         password2 = request.POST.get('password2')
         mobile = request.POST.get('mobile')
+        sms_code_client = request.POST.get('sms_code')
         allow = request.POST.get('allow')
-        # TODO sms_code短信验证码没写
         # 2.校验参数
         # 判断参数是否齐全
         if not all([username, password, password2, mobile, allow]):
@@ -86,6 +87,17 @@ class RegisterView(View):
         # 判断手机号是否合法
         if not re.match(r'^1[345789]\d{9}$', mobile):
             return http.HttpResponseForbidden('您输入的手机号格式不正确')
+        # 校验短信验证码
+        # 创建redis连接对象
+        redis_conn = get_redis_connection('verify_code')
+        # 从redis数据库中获取暂存的短信验证码
+        sms_code_server = redis_conn.get('sms_code_%s' % mobile)
+        # 判断暂存在redis数据库中的验证码是否存在
+        if sms_code_server is None:
+            return render(request, 'register.html', {'sms_code_errmsg': '短信验证码已失效'})
+        # 校验
+        if sms_code_server.decode() != sms_code_client:
+            return render(request, 'register.html', {'sms_code_errmsg': '输入验证码有误'})
         # 判断是否勾选用户协议
         if allow != 'on':
             return http.HttpResponseForbidden('请勾选用户协议')

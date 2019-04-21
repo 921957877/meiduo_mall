@@ -7,13 +7,13 @@ ssl._create_default_https_context = ssl._create_unverified_context  # 全局取�
 from .CCPRestSDK import REST
 
 # 说明：主账号，登陆云通讯网站后，可在"控制台-应用"中看到开发者主账号ACCOUNT SID
-_accountSid = '8aaf0708686ef7650168709c38240138'
+_accountSid = '8a216da86a2a8174016a3abc7b680a5c'
 
 # 说明：主账号Token，登陆云通讯网站后，可在控制台-应用中看到开发者主账号AUTH TOKEN
-_accountToken = '0e14294d3ec74c80af42fbc28f19e10d'
+_accountToken = 'abce387906be413aa6d09e59c18fe064'
 
 # 请使用管理控制台首页的APPID或自己创建应用的APPID
-_appId = '8aaf0708686ef7650168709c387d013e'
+_appId = '8a216da86a2a8174016a3abc7bc30a63'
 
 # 说明：请求地址，生产环境配置成app.cloopen.com
 _serverIP = 'sandboxapp.cloopen.com'
