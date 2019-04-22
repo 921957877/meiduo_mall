@@ -44,7 +44,7 @@ class SMSCodeView(View):
 
         # 图形验证码过期或不存在
         if image_code_server is None:
-            return http.JsonResponse({'code': RETCODE.IMAGECODEERR, 'errsmg': '图片验证码已失效'})
+            return http.JsonResponse({'code': RETCODE.IMAGECODEERR, 'errmsg': '图片验证码已失效'})
         # 5.删除存放在redis中的图形验证码，防止恶意测试图形验证码
         try:
             redis_conn.delete('img_code_%s' % uuid)
@@ -53,17 +53,25 @@ class SMSCodeView(View):
         # 6.对比图形验证码
         # 由于从redis数据库中取出来的数据都是bytes格式,所以需要进行解码,把二进制变为字符串
         if image_code_server.decode().lower() != image_code_client.lower():
-            return http.JsonResponse({'code': RETCODE.IMAGECODEERR, 'errsmg': '输入的验证码有误'})
+            return http.JsonResponse({'code': RETCODE.IMAGECODEERR, 'errmsg': '输入的验证码有误'})
         # 7.生成6位数的短信验证码
         sms_code = '%06d' % random.randint(0, 999999)
         logger.info(sms_code)
         # 8.暂存短信验证码到redis数据库,有效期为5分钟
-        redis_conn.setex('sms_code_%s' % mobile, 300, sms_code)
-        redis_conn.setex('send_flag_%s' % mobile, 60, 1)
+        # pipeline通过减少客户端与Redis的通信次数来实现降低往返延时时间
+        # 创建redis管道
+        pl = redis_conn.pipeline()
+        # 将redis请求添加到队列
+        pl.setex('sms_code_%s' % mobile, 300, sms_code)
+        pl.setex('send_flag_%s' % mobile, 60, 1)
+        # 执行管道
+        pl.execute()
         # 9.发送短信验证码
-        CCP().send_template_sms(mobile, [sms_code, 5], 1)
+        # CCP().send_template_sms(mobile, [sms_code, 5], 1)
+        from celery_tasks.sms.tasks import send_sms_code
+        send_sms_code.delay(mobile, sms_code)
         # 10.响应结果
-        return http.JsonResponse({'code': RETCODE.OK, 'errsmg': '发送短信成功'})
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '发送短信成功'})
 
 
 class ImageCodeView(View):
