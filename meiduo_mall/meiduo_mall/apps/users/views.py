@@ -84,8 +84,16 @@ class LoginView(View):
             request.session.set_expiry(None)
         # 5.登陆成功,重定向到首页
         # return redirect(reverse('contents:index'))
+        # 获取要前往的地址
+        next = request.GET.get('next')
         # 生成响应对象
-        response = redirect(reverse('contents:index'))
+        # 判断参数是否存在
+        if next:
+            # 如果不是从首页来的,则重定向到要前往的地址
+            response = redirect(next)
+        else:
+            # 如果从首页来的,则重定向到首页
+            response = redirect(reverse('contents:index'))
         # 在cookie中设置用户名信息,有效期15天
         response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
         # 返回响应对象
