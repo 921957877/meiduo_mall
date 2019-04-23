@@ -68,8 +68,8 @@ class SMSCodeView(View):
         pl.execute()
         # 9.发送短信验证码
         # CCP().send_template_sms(mobile, [sms_code, 5], 1)
-        # from celery_tasks.sms.tasks import send_sms_code TODO
-        # send_sms_code.delay(mobile, sms_code)
+        from celery_tasks.sms.tasks import send_sms_code
+        send_sms_code.delay(mobile, sms_code)
         # 10.响应结果
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '发送短信成功'})
 
