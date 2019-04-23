@@ -7,10 +7,20 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 
-# Create your views here.
 from meiduo_mall.utils.response_code import RETCODE
+from meiduo_mall.utils.views import LoginRequiredMixin
 from .models import User
 from django_redis import get_redis_connection
+
+
+# Create your views here.
+# 定义我们自己的类视图, 需要让它继承自: 工具类 + View
+class UserInfoView(LoginRequiredMixin, View):
+    """用户中心"""
+
+    def get(self, request):
+        """提供个人信息界面"""
+        return render(request, 'user_center_info.html')
 
 
 class LoginoutView(View):
