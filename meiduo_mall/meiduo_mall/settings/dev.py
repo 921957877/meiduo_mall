@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # 'users.apps.UsersConfig',  # 用户模块应用
     'users',  # 用户模块应用
+    'oauth',  # qq登陆模型应用
 ]
 
 MIDDLEWARE = [
