@@ -58,7 +58,13 @@ class LoginView(View):
         else:
             request.session.set_expiry(None)
         # 5.登陆成功,重定向到首页
-        return redirect(reverse('contents:index'))
+        # return redirect(reverse('contents:index'))
+        # 生成响应对象
+        response = redirect(reverse('contents:index'))
+        # 在cookie中设置用户名信息,有效期15天
+        response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
+        # 返回响应对象
+        return response
 
 
 class MobileCountView(View):
@@ -161,4 +167,10 @@ class RegisterView(View):
         login(request, user)
         # 4.响应注册结果
         # return http.HttpResponse('注册成功,应该跳转到首页')
-        return redirect(reverse('contents:index'))
+        # return redirect(reverse('contents:index'))
+        # 生成响应对象
+        response = redirect(reverse('contents:index'))
+        # 在cookie中设置用户名信息,有效期15天
+        response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
+        # 返回响应对象
+        return response
