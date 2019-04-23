@@ -1,7 +1,7 @@
 import re
 
 from django import http
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate
 from django.db import DatabaseError
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -11,6 +11,54 @@ from django.views import View
 from meiduo_mall.utils.response_code import RETCODE
 from .models import User
 from django_redis import get_redis_connection
+
+
+class LoginView(View):
+    """用户登陆"""
+
+    def get(self, request):
+        """
+        提供登陆界面
+        :param request: 请求对象
+        :return: 登陆界面
+        """
+        return render(request, 'login.html')
+
+    def post(self, request):
+        """
+        实现登陆逻辑
+        :param request: 请求对象
+        :return: 登陆结果
+        """
+        # 1.接收参数
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        remembered = request.POST.get('remembered')
+        # 2.校验参数
+        # 判断参数是否齐全 由于remembered 这个参数可以是 None 或是 'on'，所以不对它是否存在进行判断
+        if not all([username, password]):
+            return http.HttpResponseForbidden('缺少必传参数')
+        # 判断用户名是否是5-20个字符
+        if not re.match(r'^[a-zA-Z0-9_-]{5,20}$', username):
+            return http.HttpResponseForbidden('请输入5-20个字符的用户名')
+        # 判断密码是否是8-20个数字
+        if not re.match(r'^[0-9A-Za-z]{8,20}$', password):
+            return http.HttpResponseForbidden('请输入8-20位的密码')
+        # 3.查看数据库中是否存在该账户,如存在返回对象,不存在返回None
+        user = authenticate(username=username, password=password)
+        if user is None:
+            return render(request, 'login.html', {'account_errmsg': '用户名或密码错误'})
+        # 4.状态保持
+        login(request, user)
+        # 根据用户的选择设置状态保持的时间
+        # 不记住登陆,0表示关闭浏览器就过期
+        if remembered is None:
+            request.session.set_expiry(0)
+        # 记住登陆,None表示默认过期时间:两周后过期
+        else:
+            request.session.set_expiry(None)
+        # 5.登陆成功,重定向到首页
+        return redirect(reverse('contents:index'))
 
 
 class MobileCountView(View):
