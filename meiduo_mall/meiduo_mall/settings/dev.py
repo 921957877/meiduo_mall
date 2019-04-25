@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     # 'users.apps.UsersConfig',  # 用户模块应用
     'users',  # 用户模块应用
     'oauth',  # qq登陆模型应用
+    'corsheaders',  # 添加 django-cors-headers 的配置内容, 使其可以进行cors跨域
 ]
 
 MIDDLEWARE = [
@@ -58,6 +59,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 添加 django-cors-headers 的配置内容, 使其可以进行cors跨域
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'meiduo_mall.urls'
@@ -226,3 +229,24 @@ LOGIN_URL = '/login/'
 QQ_CLIENT_ID = '101518219'
 QQ_CLIENT_SECRET = '418d84ebdc7241efb79536886ae95224'
 QQ_REDIRECT_URI = 'http://www.meiduo.site:8000/oauth_callback'
+
+# 添加 django-cors-headers 的白名单, 使白名单中的 host 可以进行跨域请求
+CORS_ORIGIN_WHITELIST = (
+    # 白名单:
+    '127.0.0.1:8080',
+    'localhost:8080',
+
+    '127.0.0.1:8081',
+    'localhost:8081',
+
+    'localhost:8000',
+    '127.0.0.1:8000',
+
+    'www.meiduo.site:8080',
+    'www.meiduo.site:8000',
+    'www.meiduo.site',
+
+    '172.128.16.238:8001',
+)
+# 允许白名单中的 host 跨域请求时携带 cookie
+CORS_ALLOW_CREDENTIALS = True
