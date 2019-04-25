@@ -5,21 +5,19 @@ from django.conf import settings
 from django.contrib.auth import login
 from django.db import DatabaseError
 from django.shortcuts import render, redirect
-import logging
 from django.urls import reverse
 from oauth.models import OAuthQQUser
 from oauth.utils import generate_access_token, check_access_token
 from users.models import User
-
-logger = logging.getLogger('django')
 from django.views import View
 from meiduo_mall.utils.response_code import RETCODE
 from django_redis import get_redis_connection
+import logging
+
+logger = logging.getLogger('django')
 
 
 # Create your views here.
-
-
 class QQUserView(View):
     """用户扫码登陆的回调处理"""
 
@@ -64,8 +62,14 @@ class QQUserView(View):
             qq_user = oauth_user.user
             # 实现状态保持
             login(request, qq_user)
-            # 创建重定向到首页的对象
-            response = redirect(reverse('contents:index'))
+            # # 创建重定向到首页的对象
+            # response = redirect(reverse('contents:index'))
+            # 重定向到首页或用户要前往的页面
+            next = request.GET.get('state')
+            if next:
+                response = redirect(next)
+            else:
+                response = redirect(reverse('contents:index'))
             # 将用户名写入cookie,有效期15天
             response.set_cookie('username', qq_user.username, max_age=3600 * 24 * 15)
             # 返回响应
@@ -78,7 +82,7 @@ class QQUserView(View):
         如有,直接将openid绑定用户数据
         如没有,创建用户数据并绑定openid
         :param request: 请求对象
-        :return: TODO
+        :return: 响应结果
         """
         # 1.接收参数
         mobile = request.POST.get('mobile')
@@ -137,12 +141,9 @@ class QQUserView(View):
             else:
                 response = redirect(reverse('contents:index'))
             # 登录时用户名写入到 cookie，有效期15天
-            response.set_cookie('username', user.username, max_age=3600*24*15)
+            response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
             # 返回响应
             return response
-
-
-
 
 
 class QQURLView(View):
