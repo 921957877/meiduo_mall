@@ -1,20 +1,23 @@
+import re
 from QQLoginTool.QQtool import OAuthQQ
 from django import http
 from django.conf import settings
 from django.contrib.auth import login
+from django.db import DatabaseError
 from django.shortcuts import render, redirect
 import logging
-
 from django.urls import reverse
-
 from oauth.models import OAuthQQUser
-from oauth.utils import generate_access_token
+from oauth.utils import generate_access_token, check_access_token
+from users.models import User
 
 logger = logging.getLogger('django')
-# Create your views here.
 from django.views import View
-
 from meiduo_mall.utils.response_code import RETCODE
+from django_redis import get_redis_connection
+
+
+# Create your views here.
 
 
 class QQUserView(View):
@@ -48,14 +51,14 @@ class QQUserView(View):
         # 6.判断用户账号是否使用QQ登陆过(openid是否在数据库中)
         try:
             oauth_user = OAuthQQUser.objects.get(openid=openid)
-        # 用户账号没使用QQ登陆过(openid不在数据库中)
+        # 6.1 用户账号没使用QQ登陆过(openid不在数据库中)
         except OAuthQQUser.DoesNotExist:
             # 把openid加密成access_token
             access_token = generate_access_token(openid)
             context = {'access_token': access_token}
             # 返回access_token并跳转到绑定页面
             return render(request, 'oauth_callback.html', context)
-        # 用户账号使用QQ登陆过(openid在数据库中)
+        # 6.2 用户账号使用QQ登陆过(openid在数据库中)
         else:
             # 根据user外键,获取对应的QQ用户
             qq_user = oauth_user.user
@@ -67,6 +70,79 @@ class QQUserView(View):
             response.set_cookie('username', qq_user.username, max_age=3600 * 24 * 15)
             # 返回响应
             return response
+
+    def post(self, request):
+        """
+        实现QQ登陆的第三个接口,用于接收前端发来的手机号,密码,短信验证码,access_token,校验这些参数后,
+        查看数据库中是否有用户数据
+        如有,直接将openid绑定用户数据
+        如没有,创建用户数据并绑定openid
+        :param request: 请求对象
+        :return: TODO
+        """
+        # 1.接收参数
+        mobile = request.POST.get('mobile')
+        password = request.POST.get('password')
+        sms_code_client = request.POST.get('sms_code')
+        access_token = request.POST.get('access_token')
+        # 2.校验参数
+        # 判断参数是否齐全
+        if not all([mobile, password, sms_code_client]):
+            return http.HttpResponseForbidden('缺少必传参数')
+        # 判断手机号是否合法
+        if not re.match(r'^1[345789]\d{9}$', mobile):
+            return http.HttpResponseForbidden('您输入的手机号格式不正确')
+        # 判断密码是否是8-20个数字
+        if not re.match(r'^[0-9A-Za-z]{8,20}$', password):
+            return http.HttpResponseForbidden('请输入8-20位的密码')
+        # 判断短信验证码是否一致
+        # 创建redis连接对象
+        redis_conn = get_redis_connection('verify_code')
+        # 从redis数据库中获取保存的短信验证码值
+        sms_code_server = redis_conn.get('sms_code_%s' % mobile)
+        # 如果获取的为空
+        if sms_code_server is None:
+            return render(request, 'oauth_callback.html', {'sms_code_errmsg': '短信验证码已失效'})
+        # 如果用户输的验证码和数据库中存的不一致
+        if sms_code_server.decode() != sms_code_client:
+            return render(request, 'oauth_callback.html', {'sms_code_errmsg': '短信验证码输入错误'})
+        # 校验access_token
+        # 把access_token解密成openid
+        openid = check_access_token(access_token)
+        # 如果openid不存在
+        if openid is None:
+            return render(request, 'oauth_callback.html', {'openid_errmsg': 'access_token不正确'})
+        # 查看数据库中是否有用户数据
+        try:
+            user = User.objects.get(mobile=mobile)
+        # 没有,创建用户数据
+        except User.DoesNotExist:
+            user = User.objects.create_user(username=mobile, password=password, mobile=mobile)
+        # 有,检查密码
+        else:
+            if not user.check_password(password):
+                return render(request, 'oauth_callback.html', {'account_errmsg': '密码错误'})
+        # openid绑定用户数据
+        try:
+            OAuthQQUser.objects.create(user=user, openid=openid)
+        except DatabaseError:
+            return render(request, 'oauth_callback.html', {'qq_login_errmsg': '绑定用户失败'})
+        else:
+            # 实现状态保持
+            login(request, user)
+            # 重定向到首页或用户要前往的页面
+            next = request.GET.get('state')
+            if next:
+                response = redirect(next)
+            else:
+                response = redirect(reverse('contents:index'))
+            # 登录时用户名写入到 cookie，有效期15天
+            response.set_cookie('username', user.username, max_age=3600*24*15)
+            # 返回响应
+            return response
+
+
+
 
 
 class QQURLView(View):
