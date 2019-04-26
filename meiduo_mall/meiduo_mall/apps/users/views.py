@@ -1,3 +1,4 @@
+import json
 import re
 
 from django import http
@@ -11,6 +12,34 @@ from meiduo_mall.utils.response_code import RETCODE
 from meiduo_mall.utils.views import LoginRequiredMixin
 from .models import User
 from django_redis import get_redis_connection
+import logging
+
+logger = logging.getLogger('django')
+
+
+class EmailView(View):
+    """添加邮箱"""
+
+    def put(self, request):
+        """实现添加邮箱逻辑"""
+        # 1.接收前端以json类型发送来的参数
+        json_str = request.body.decode()
+        json_dict = json.loads(json_str)
+        email = json_dict.get('email')
+        # 2.校验参数
+        if not email:
+            return http.HttpResponseForbidden('缺少email参数')
+        if not re.match(r'^[a-z0-9][\w\.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$', email):
+            return http.HttpResponseForbidden('邮箱格式错误')
+        # 3.将email数据更改到数据库
+        try:
+            request.user.email = email
+            request.user.save()
+        # 4.响应添加邮箱结果
+        except Exception as e:
+            logger.error(e)
+            return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '邮箱保存失败'})
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '邮箱保存成功'})
 
 
 # Create your views here.
