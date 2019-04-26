@@ -30,14 +30,14 @@ def login_required_json(view_function):
     """
     # @wraps装饰器可返回view_function的名字和文档,否则返回的是内层函数的引用,即view指向了wrapper
     @wraps(view_function)
-    def wrap(request, *args, **kwargs):
+    def wrapper(request, *args, **kwargs):
         # 如果用户未登陆,返回json数据
         if not request.user.is_authenticated():
             return http.JsonResponse({'code': RETCODE.SESSIONERR, 'errmsg': '用户未登录'})
         # 如果用户登陆,进入到view_function中
         return view_function(request, *args, **kwargs)
 
-    return wrap
+    return wrapper
 
 
 class LoginRequiredJsonMixin(object):

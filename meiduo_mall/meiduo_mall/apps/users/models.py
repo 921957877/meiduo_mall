@@ -1,5 +1,7 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from itsdangerous import TimedJSONWebSignatureSerializer
 
 
 # Create your models here.
@@ -20,3 +22,23 @@ class User(AbstractUser):
     # 在str魔法方法中返回用户名称
     def __str__(self):
         return self.username
+
+    """这个函数的主要作用是根据每个人的不同, 生成不同的邮箱验证链接,由于每个用户对于模型类来说是不同的,
+    所以生成的验证链接也是不同的,因此把函数定义在模型类内"""
+    def generate_verify_email(self):
+        """
+        生成邮箱验证链接
+        :return: 验证链接
+        """
+        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, expires_in=60 * 60 * 24)
+        # 拼接参数
+        data = {
+            'user_id': self.id,
+            'email': self.email
+        }
+        # 生成token值并解码
+        token = serializer.dumps(data).decode()
+        verify_email = settings.EMAIL_VERIFY_URL + '?token=' + token
+        # 返回
+        return verify_email
+

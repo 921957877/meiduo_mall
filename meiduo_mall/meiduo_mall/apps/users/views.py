@@ -39,6 +39,11 @@ class EmailView(LoginRequiredJsonMixin, View):
         except Exception as e:
             logger.error(e)
             return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '邮箱保存失败'})
+        # 异步发送验证邮件
+        from celery_tasks.email.tasks import send_verify_email
+        # 生成邮箱验证链接
+        verify_url = request.user.generate_verify_email()
+        send_verify_email.delay(email, verify_url)
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '邮箱保存成功'})
 
 
@@ -244,5 +249,3 @@ class RegisterView(View):
         response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
         # 返回响应对象
         return response
-
-
