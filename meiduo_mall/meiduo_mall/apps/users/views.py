@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.views import View
 
 from meiduo_mall.utils.response_code import RETCODE
-from meiduo_mall.utils.views import LoginRequiredMixin
+from meiduo_mall.utils.views import LoginRequiredMixin, LoginRequiredJsonMixin
 from .models import User
 from django_redis import get_redis_connection
 import logging
@@ -17,7 +17,7 @@ import logging
 logger = logging.getLogger('django')
 
 
-class EmailView(View):
+class EmailView(LoginRequiredJsonMixin, View):
     """添加邮箱"""
 
     def put(self, request):
@@ -244,3 +244,5 @@ class RegisterView(View):
         response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
         # 返回响应对象
         return response
+
+
