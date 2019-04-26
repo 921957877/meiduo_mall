@@ -17,6 +17,32 @@ import logging
 logger = logging.getLogger('django')
 
 
+class VerifyEmailView(View):
+    """验证邮箱"""
+
+    def get(self, request):
+        """实现邮箱验证逻辑"""
+        # 接收参数
+        token = request.GET.get('token')
+        # 校验参数,判断token是否为空
+        if not token:
+            return http.HttpResponseForbidden('缺少token')
+        # 验证token
+        user = User.check_verify_email_token(token)
+        if user is None:
+            return http.HttpResponseForbidden('token已失效')
+        # 修改email_active为True
+        try:
+            user.email_active = True
+            user.save()
+        # 失败
+        except Exception as e:
+            logger.error(e)
+            return http.HttpResponseServerError('邮箱验证失败')
+        # 成功,重定向到个人用户中心页  TODO 未实现状态保持,重定向后还需重新登陆,待解决
+        return redirect(reverse('users:info'))
+
+
 class EmailView(LoginRequiredJsonMixin, View):
     """添加邮箱"""
 

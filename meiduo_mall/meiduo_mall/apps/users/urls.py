@@ -12,4 +12,5 @@ urlpatterns = [
     url(r'^logout/$', views.LoginoutView.as_view(), name='logout'),  # 退出登陆
     url(r'^info/$', views.UserInfoView.as_view(), name='info'),  # 用户中心个人信息
     url(r'^emails/$', views.EmailView.as_view()),  # 添加邮箱
+    url(r'^emails/verification/$', views.VerifyEmailView.as_view()),  # 验证邮箱
 ]
