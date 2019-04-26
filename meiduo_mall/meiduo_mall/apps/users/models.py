@@ -8,6 +8,8 @@ class User(AbstractUser):
     """自定义用户模型类"""
     # 在用户模型类中增加mobile字段
     mobile = models.CharField(max_length=11, verbose_name='手机号', unique=True)
+    # 增加email_active字段,用于记录邮箱是否验证过,默认为False,未验证
+    email_active = models.BooleanField(default=False, verbose_name='邮箱验证状态')
 
     # 对当前表进行相关设置
     class Meta:
