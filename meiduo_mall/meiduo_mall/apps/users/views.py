@@ -77,6 +77,20 @@ class UpdateDestroyAddressView(LoginRequiredJsonMixin, View):
         # 5.返回响应
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '修改地址成功', 'address': address_dict})
 
+    def delete(self, request, address_id):
+        """删除地址"""
+        try:
+            # 查询要删除的地址
+            address = Address.objects.get(id=address_id)
+            # 将地址的逻辑删除设置为True
+            address.is_deleted = True
+            address.save()
+        except Exception as e:
+            logger.error(e)
+            return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '删除地址失败'})
+        # 响应删除地址结果
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '删除地址成功'})
+
 
 class CreateAddressView(LoginRequiredJsonMixin, View):
     """新增地址"""
@@ -153,7 +167,7 @@ class AddressView(LoginRequiredMixin, View):
     def get(self, request):
         """提供收货地址页面"""
         # 1.获取用户所有的地址
-        addresses = Address.objects.filter(user=request.user, is_delete=False)
+        addresses = Address.objects.filter(user=request.user, is_deleted=False)
         # 创建空的列表
         address_dict_list = []
         # 遍历地址

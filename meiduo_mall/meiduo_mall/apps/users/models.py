@@ -94,7 +94,7 @@ class Address(BaseModel):
     mobile = models.CharField(max_length=11, verbose_name='手机')
     tel = models.CharField(max_length=20, null=True, blank=True, default='', verbose_name='固定电话')
     email = models.CharField(max_length=30, null=True, blank=True, default='', verbose_name='邮箱')
-    is_delete = models.BooleanField(default=False, verbose_name='逻辑删除')
+    is_deleted = models.BooleanField(default=False, verbose_name='逻辑删除')
 
     class Meta:
         db_table = 'tb_address'
