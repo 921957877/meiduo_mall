@@ -10,19 +10,113 @@ from django.views import View
 
 from meiduo_mall.utils.response_code import RETCODE
 from meiduo_mall.utils.views import LoginRequiredMixin, LoginRequiredJsonMixin
-from .models import User
+from .models import User, Address
 from django_redis import get_redis_connection
 import logging
 
 logger = logging.getLogger('django')
 
 
+class CreateAddressView(LoginRequiredJsonMixin, View):
+    """新增地址"""
+    def post(self, request):
+        """实现新增地址逻辑"""
+        # 获取地址个数
+        count = request.user.addresses.count()
+        # 判断是否超过地址上限,最多20个
+        if count >= 20:
+            return http.JsonResponse({'code': RETCODE.THROTTLINGERR, 'errmsg': '地址数量超上限'})
+        # 获取参数
+        json_str = request.body.decode()
+        json_dict = json.loads(json_str)
+        receiver = json_dict.get('receiver')
+        province_id = json_dict.get('province_id')
+        city_id = json_dict.get('city_id')
+        district_id = json_dict.get('district_id')
+        place = json_dict.get('place')
+        mobile = json_dict.get('mobile')
+        tel = json_dict.get('tel')
+        email = json_dict.get('email')
+        # 校验参数
+        if not all([receiver, province_id, city_id, district_id, place, mobile]):
+            return http.HttpResponseForbidden('缺少必传参数')
+        if not re.match(r'^1[345789]\d{9}$', mobile):
+            return http.HttpResponseForbidden('手机号格式不正确')
+        if tel:
+            if not re.match(r'^(0[0-9]{2,3}-)?([2-9][0-9]{6,7})+(-[0-9]{1,4})?$', tel):
+                return http.HttpResponseForbidden('固定电话格式不正确')
+        if email:
+            if not re.match(r'^[a-z0-9][\w\.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$', email):
+                return http.HttpResponseForbidden('邮箱格式不正确')
+        # 保存地址信息到数据库
+        try:
+            address = Address.objects.create(
+                user=request.user,
+                province_id=province_id,
+                city_id=city_id,
+                district_id=district_id,
+                title=receiver,
+                receiver=receiver,
+                place=place,
+                mobile=mobile,
+                tel=tel,
+                email=email
+            )
+            # 判断有没有设置默认地址
+            if not request.user.default_address:
+                request.user.default_address = address
+                request.user.save()
+        except Exception as e:
+            logger.error(e)
+            return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '新增地址出错'})
+        # 保存地址信息成功,将地址信息响应给前端
+        address_dict = {
+            'id': address.id,
+            'title': address.title,
+            'receiver': address.receiver,
+            'province': address.province.name,
+            'city': address.city.name,
+            'district': address.district.name,
+            'place': address.place,
+            'mobile': address.mobile,
+            'tel': address.tel,
+            'email': address.email
+        }
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok', 'address': address_dict})
+
+
 class AddressView(LoginRequiredMixin, View):
     """用户收货地址"""
-
     def get(self, request):
         """提供收货地址页面"""
-        return render(request, 'user_center_site.html')
+        # 1.获取用户所有的地址
+        addresses = Address.objects.filter(user=request.user, is_delete=False)
+        # 创建空的列表
+        address_dict_list = []
+        # 遍历地址
+        for address in addresses:
+            address_dict = {
+                'id': address.id,
+                'province': address.province.name,
+                'city': address.city.name,
+                'district': address.district.name,
+                'title': address.title,
+                'receiver': address.receiver,
+                'place': address.place,
+                'mobile': address.mobile,
+                'tel': address.tel,
+                'email': address.email
+            }
+            # 把默认地址排在最前面显示
+            if request.user.default_address.id == address.id:
+                address_dict_list.insert(0, address_dict)
+            else:
+                address_dict_list.append(address_dict)
+        context = {
+            'default_address_id': request.user.default_address_id,
+            'addresses': address_dict_list
+        }
+        return render(request, 'user_center_site.html', context)
 
 
 class VerifyEmailView(View):
