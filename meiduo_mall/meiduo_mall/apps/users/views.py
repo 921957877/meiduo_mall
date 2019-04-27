@@ -17,8 +17,70 @@ import logging
 logger = logging.getLogger('django')
 
 
+class UpdateDestroyAddressView(LoginRequiredJsonMixin, View):
+    """修改和删除地址"""
+
+    def put(self, request, address_id):
+        """修改地址"""
+        # 1.接收参数
+        json_dict = json.loads(request.body.decode())
+        receiver = json_dict.get('receiver')
+        province_id = json_dict.get('province_id')
+        city_id = json_dict.get('city_id')
+        district_id = json_dict.get('district_id')
+        place = json_dict.get('place')
+        mobile = json_dict.get('mobile')
+        tel = json_dict.get('tel')
+        email = json_dict.get('email')
+        # 2.校验参数
+        if not all([receiver, province_id, city_id, district_id, place, mobile]):
+            return http.HttpResponseForbidden('缺少必传参数')
+        if not re.match(r'^1[345789]\d{9}$', mobile):
+            return http.HttpResponseForbidden('手机格式不正确')
+        if tel:
+            if not re.match(r'^(0[0-9]{2,3}-)?([2-9][0-9]{6,7})+(-[0-9]{1,4})?$', tel):
+                return http.HttpResponseForbidden('固定电话格式不正确')
+        if email:
+            if not re.match(r'^[a-z0-9][\w\.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$', email):
+                return http.HttpResponseForbidden('邮箱格式不正确')
+        # 3.更新数据库中的数据
+        try:
+            Address.objects.filter(id=address_id).update(
+                user=request.user,
+                title=receiver,
+                receiver=receiver,
+                province_id=province_id,
+                city_id=city_id,
+                district_id=district_id,
+                place=place,
+                mobile=mobile,
+                tel=tel,
+                email=email
+            )
+        except Exception as e:
+            logger.error(e)
+            return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '修改地址失败'})
+        # 4.构造响应数据
+        address = Address.objects.get(id=address_id)
+        address_dict = {
+            'id': address.id,
+            'title': address.title,
+            'receiver': address.receiver,
+            'province': address.province.name,
+            'city': address.city.name,
+            'district': address.district.name,
+            'place': address.place,
+            'mobile': address.mobile,
+            'tel': address.tel,
+            'email': address.email
+        }
+        # 5.返回响应
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '修改地址成功', 'address': address_dict})
+
+
 class CreateAddressView(LoginRequiredJsonMixin, View):
     """新增地址"""
+
     def post(self, request):
         """实现新增地址逻辑"""
         # 获取地址个数
@@ -87,6 +149,7 @@ class CreateAddressView(LoginRequiredJsonMixin, View):
 
 class AddressView(LoginRequiredMixin, View):
     """用户收货地址"""
+
     def get(self, request):
         """提供收货地址页面"""
         # 1.获取用户所有的地址
