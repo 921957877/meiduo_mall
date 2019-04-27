@@ -47,7 +47,9 @@ class VerifyEmailView(View):
         except Exception as e:
             logger.error(e)
             return http.HttpResponseServerError('邮箱验证失败')
-        # 成功,重定向到个人用户中心页  TODO 未实现状态保持,重定向后还需重新登陆,待解决
+        # 实现状态保持,使重定向后无需重新登陆
+        login(request, user)
+        # 成功,重定向到个人用户中心页
         return redirect(reverse('users:info'))
 
 

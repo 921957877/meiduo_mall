@@ -24,5 +24,5 @@ class ProvinceAreasView(View):
         except Exception:
             return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '省份数据错误'})
         else:
-            # 3.响应省级数据 TODO 为什么这里不用写safe=false
+            # 3.响应省级数据
             return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK', 'province_list': province_list})
