@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'oauth',  # qq登陆模型应用
     'corsheaders',  # 添加 django-cors-headers 的配置内容, 使其可以进行cors跨域
     'areas',  # 地区应用
+    'contents',  # 首页应用
+    'goods',  # 商品应用
 ]
 
 MIDDLEWARE = [
