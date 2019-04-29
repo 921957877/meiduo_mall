@@ -17,8 +17,49 @@ import logging
 logger = logging.getLogger('django')
 
 
+class ChangePasswordView(LoginRequiredMixin, View):
+    """修改密码"""
+
+    def get(self, request):
+        """展示修改密码界面"""
+        return render(request, 'user_center_pass.html')
+
+    def post(self, request):
+        """实现修改密码逻辑"""
+        # 1.接收参数
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        new_password2 = request.POST.get('new_password2')
+        # 2.校验参数
+        if not all([old_password, new_password, new_password2]):
+            return http.HttpResponseForbidden('缺少必传参数')
+        try:
+            request.user.check_password(old_password)
+        except Exception as e:
+            logger.error(e)
+            return render(request, 'user_center_pass.html', {'origin_pwd_errmsg': '当前密码输入错误'})
+        if not re.match(r'^[0-9A-Za-z]{8,20}$', new_password):
+            return http.HttpResponseForbidden('请输入8-20位的密码')
+        if new_password != new_password2:
+            return http.HttpResponseForbidden('两次输入的密码不一致')
+        # 3.修改密码
+        try:
+            request.user.set_password(new_password)
+            request.user.save()
+        except Exception as e:
+            logger.error(e)
+            return render(request, 'user_center_pass.html', {'change_pwd_errmsg': '修改密码失败'})
+        # 4.清理状态保持信息,重定向到登陆页面
+        logout(request)
+        response = redirect(reverse('users:login'))
+        response.delete_cookie('username')
+        # 5.返回响应
+        return response
+
+
 class UpdateTitleAddressView(LoginRequiredJsonMixin, View):
     """设置地址标题"""
+
     def put(self, request, address_id):
         """设置地址标题"""
         # 接收参数,地址标题
