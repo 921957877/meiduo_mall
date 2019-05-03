@@ -330,6 +330,7 @@ class EmailView(LoginRequiredJsonMixin, View):
         # 生成邮箱验证链接
         verify_url = request.user.generate_verify_email()
         send_verify_email.delay(email, verify_url)
+        # send_verify_email(email, verify_url)
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '邮箱保存成功'})
 
 
