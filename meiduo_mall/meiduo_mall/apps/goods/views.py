@@ -6,12 +6,32 @@ from django.shortcuts import render
 from django.views import View
 
 from goods.models import GoodsCategory, SKU
-from goods.utils import get_categories, get_breadcrumb
+from goods.utils import get_categories, get_breadcrumb, get_goods_and_spec
 from meiduo_mall.utils.response_code import RETCODE
+
+
+class DetailView(View):
+    """商品详情页"""
+    def get(self, request, sku_id):
+        """提供商品详情页"""
+        # 获取商品频道分类
+        categories = get_categories()
+        # 调用封装的函数,根据sku_id获取对应的商品数据字典
+        data = get_goods_and_spec(sku_id, request)
+        # 拼接字典数据
+        context = {
+            'categories': categories,
+            'sku': data.get('sku'),
+            'goods': data.get('goods'),
+            'specs': data.get('goods_specs'),
+        }
+        # 渲染页面
+        return render(request, 'detail.html', context)
 
 
 class HotGoodsView(View):
     """商品热销排行"""
+
     def get(self, request, category_id):
         """提供商品热销排行的Json数据"""
         # 获取当前分类并且上架的商品并倒序处理取前两个

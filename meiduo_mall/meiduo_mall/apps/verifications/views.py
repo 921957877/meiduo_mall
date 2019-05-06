@@ -92,3 +92,4 @@ class ImageCodeView(View):
         redis_conn.setex('img_code_%s' % uuid, 300, text)
         # 3.返回:图片  HttpResponse(content=响应体, content_type=‘响应体数据类型’, status=状态码(100-599))
         return http.HttpResponse(image, content_type='image/jpg')
+
