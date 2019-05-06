@@ -19,4 +19,5 @@ urlpatterns = [
     url(r'^addresses/(?P<address_id>\d+)/default/$', views.DefaultAddressView.as_view()),  # 设置默认地址
     url(r'^addresses/(?P<address_id>\d+)/title/$', views.UpdateTitleAddressView.as_view()),  # 修改地址标题
     url(r'^password/$', views.ChangePasswordView.as_view(), name='pass'),  # 修改密码
+    url(r'^browse_histories/$', views.UserBrowseHistory.as_view()),  # 用户浏览记录
 ]
