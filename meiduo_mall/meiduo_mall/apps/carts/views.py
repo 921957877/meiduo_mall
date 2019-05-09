@@ -16,6 +16,58 @@ from meiduo_mall.utils.response_code import RETCODE
 class CartsView(View):
     """购物车管理"""
 
+    def delete(self, request):
+        """删除购物车"""
+        # 接收参数
+        json_dict = json.loads(request.body.decode())
+        sku_id = json_dict.get('sku_id')
+        # 判断sku_id在SKU表中是否存在
+        try:
+            SKU.objects.get(id=sku_id)
+        except SKU.DoesNotExist:
+            return http.HttpResponseForbidden('商品不存在')
+        # 判断用户是否登陆
+        if request.user.is_authenticated:
+            # 如登陆,删除redis中的数据
+            # 创建redis连接对象
+            redis_conn = get_redis_connection('carts')
+            pl = redis_conn.pipeline()
+            # 删除hash和set表中的该商品数据
+            pl.hdel('carts_%s' % request.user.id, sku_id)
+            pl.srem('selected_%s' % request.user.id, sku_id)
+            pl.execute()
+            # 返回响应
+            return http.JsonResponse({
+                'code': RETCODE.OK,
+                'errmsg': '删除购物车成功'
+            })
+        else:
+            # 如未登录,删除cookie中的数据
+            # 获取cookie
+            cookie_cart = request.COOKIES.get('carts')
+            # 判断cookie是否存在
+            if cookie_cart:
+                # 如果cookie存在,解密
+                cart_dict = pickle.loads(base64.b64decode(cookie_cart))
+            else:
+                # 如果cookie不存在,定义一个空字典
+                cart_dict = {}
+            # 创建响应对象
+            response = http.JsonResponse({
+                'code': RETCODE.OK,
+                'errmsg': '删除购物车成功'
+            })
+            # 判断该商品是否在cookie中
+            if sku_id in cart_dict:
+                # 如在,删除该商品的数据
+                del cart_dict[sku_id]
+                # 加密
+                cart_data = base64.b64encode(pickle.dumps(cart_dict)).decode()
+                # 写入cookie
+                response.set_cookie('carts', cart_data)
+            # 返回响应
+            return response
+
     def put(self, request):
         """修改购物车"""
         # 接收json格式的参数
