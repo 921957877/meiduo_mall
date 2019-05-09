@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'goods',  # 商品应用
     'haystack',  # 全文检索
     'carts',  # 购物车应用
+    'orders',  # 订单应用
 ]
 
 MIDDLEWARE = [
