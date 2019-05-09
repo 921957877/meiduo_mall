@@ -13,6 +13,59 @@ from goods.models import SKU
 from meiduo_mall.utils.response_code import RETCODE
 
 
+class CartsSelectAllView(View):
+    """全选购物车"""
+    def put(self, request):
+        # 接收参数
+        json_dict = json.loads(request.body.decode())
+        selected = json_dict.get('selected', True)
+        # 校验参数
+        if selected:
+            if not isinstance(selected, bool):
+                return http.HttpResponseForbidden('参数selected有误')
+        # 判断用户是否登陆
+        if request.user.is_authenticated:
+            # 如登陆,操作redis
+            # 创建redis连接对象
+            redis_conn = get_redis_connection('carts')
+            # 获取商品id列表
+            item_dict = redis_conn.hgetall('carts_%s' % request.user.id)
+            sku_ids = item_dict.keys()
+            # 判断selected为True还是False
+            if selected:
+                # 如为True,将set表中的这些商品id增加
+                redis_conn.sadd('selected_%s' % request.user.id, *sku_ids)
+            else:
+                # 如为False,将set表中的这些商品id删除
+                redis_conn.srem('selected_%s' % request.user.id, *sku_ids)
+            # 返回响应
+            return http.JsonResponse({
+                'code': RETCODE.OK,
+                'errmsg': 'OK'
+            })
+        else:
+            # 如未登录,操作cookie
+            # 获取cookie
+            cookie_cart = request.COOKIES.get('carts')
+            response = http.JsonResponse({
+                'code': RETCODE.OK,
+                'errmsg': 'OK'
+            })
+            # 判断cookie是否存在
+            if cookie_cart:
+                # 如存在,解密
+                cart_dict = pickle.loads(base64.b64decode(cookie_cart))
+                # 将cookie中的selected全部改为前端传来的selected
+                for sku_id in cart_dict:
+                    cart_dict[sku_id]['selected'] = selected
+                # 加密
+                cart_data = base64.b64encode(pickle.dumps(cart_dict)).decode()
+                # 写入cookie
+                response.set_cookie('carts', cart_data)
+            # 返回响应
+            return response
+
+
 class CartsView(View):
     """购物车管理"""
 
