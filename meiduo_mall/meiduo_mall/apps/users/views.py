@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 
+from carts.utils import merge_cart_cookie_to_redis
 from goods.models import SKU
 from meiduo_mall.utils.response_code import RETCODE
 from meiduo_mall.utils.views import LoginRequiredMixin, LoginRequiredJsonMixin
@@ -20,6 +21,7 @@ logger = logging.getLogger('django')
 
 class UserBrowseHistory(LoginRequiredJsonMixin, View):
     """用户浏览记录"""
+
     def get(self, request):
         """获取用户浏览记录"""
         # 获取存储在redis中的sku_id列表信息
@@ -61,8 +63,6 @@ class UserBrowseHistory(LoginRequiredJsonMixin, View):
         pl.execute()
         # 响应结果
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK'})
-
-
 
 
 class ChangePasswordView(LoginRequiredMixin, View):
@@ -417,7 +417,6 @@ class LoginoutView(View):
 
 class LoginView(View):
     """用户登陆"""
-
     def get(self, request):
         """
         提供登陆界面
@@ -473,6 +472,8 @@ class LoginView(View):
             response = redirect(reverse('contents:index'))
         # 在cookie中设置用户名信息,有效期15天
         response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
+        # 合并购物车数据
+        response = merge_cart_cookie_to_redis(request, response)
         # 返回响应对象
         return response
 

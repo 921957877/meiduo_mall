@@ -6,6 +6,8 @@ from django.contrib.auth import login
 from django.db import DatabaseError
 from django.shortcuts import render, redirect
 from django.urls import reverse
+
+from carts.utils import merge_cart_cookie_to_redis
 from oauth.models import OAuthQQUser
 from oauth.utils import generate_access_token, check_access_token
 from users.models import User
@@ -72,6 +74,8 @@ class QQUserView(View):
                 response = redirect(reverse('contents:index'))
             # 将用户名写入cookie,有效期15天
             response.set_cookie('username', qq_user.username, max_age=3600 * 24 * 15)
+            # 合并购物车数据
+            response = merge_cart_cookie_to_redis(request, response)
             # 返回响应
             return response
 
@@ -142,6 +146,8 @@ class QQUserView(View):
                 response = redirect(reverse('contents:index'))
             # 登录时用户名写入到 cookie，有效期15天
             response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
+            # 合并购物车数据
+            response = merge_cart_cookie_to_redis(request, response)
             # 返回响应
             return response
 
