@@ -11,6 +11,47 @@ from django.views import View
 from meiduo_mall.utils.response_code import RETCODE
 from meiduo_mall.utils.views import LoginRequiredJsonMixin
 from orders.models import OrderInfo
+from payment.models import Payment
+
+
+class PaymentStatusView(View):
+    """支付宝第二个接口:保存订单支付结果"""
+
+    def get(self, request):
+        # 获取QueryDict对象
+        query_dict = request.GET
+        data = query_dict.dict()
+        # 剔除字典中的sign
+        signature = data.pop('sign')
+        # 创建支付宝支付对象
+        alipay = AliPay(
+            appid=settings.ALIPAY_APPID,
+            app_notify_url=None,  # 默认回调url
+            app_private_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "keys/app_private_key.pem"),
+            alipay_public_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                "keys/alipay_public_key.pem"),
+            sign_type="RSA2",
+            debug=settings.ALIPAY_DEBUG
+        )
+        # 校验这个重定向是否是支付宝重定向过来的
+        success = alipay.verify(data, signature)
+        # 如果校验成功
+        if success:
+            # 保存订单号和流水号到数据库
+            order_id = data.get('out_trade_no')
+            trade_id = data.get('trade_no')
+            Payment.objects.create(order_id=order_id, trade_id=trade_id)
+            # 将订单状态由待支付修改为待评价
+            OrderInfo.objects.filter(order_id=order_id, status=OrderInfo.ORDER_STATUS_ENUM['UNPAID']).update(
+                status=OrderInfo.ORDER_STATUS_ENUM['UNCOMMENT'])
+            # 将流水号返回
+            context = {
+                'trade_id': trade_id
+            }
+            return render(request, 'pay_success.html', context)
+        else:
+            # 如果校验失败,返回报错信息
+            return http.HttpResponseForbidden('非法请求')
 
 
 class PaymentView(LoginRequiredJsonMixin, View):
