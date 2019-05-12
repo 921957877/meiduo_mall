@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'haystack',  # 全文检索
     'carts',  # 购物车应用
     'orders',  # 订单应用
+    'payment',  # 支付宝支付应用
 ]
 
 MIDDLEWARE = [
@@ -301,7 +302,7 @@ DEFAULT_FILE_STORAGE = 'meiduo_mall.utils.fastdfs.fastdfs_storage.FastDFSStorage
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
-        'URL': 'http://192.168.82.132:9200/',  # Elasticsearch服务器ip地址，端口号固定为9200
+        'URL': 'http://192.168.82.133:9200/',  # Elasticsearch服务器ip地址，端口号固定为9200
         'INDEX_NAME': 'meiduo_mall',  # Elasticsearch建立的索引库的名称
     },
 }
@@ -311,3 +312,9 @@ HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 
 # 可以在 dev.py 中添加如下代码, 用于决定每页显示数据条数:
 HAYSTACK_SEARCH_RESULTS_PER_PAGE = 6
+
+# 支付宝SDK配置参数
+ALIPAY_APPID = '2016100100637097'
+ALIPAY_DEBUG = True
+ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'
+ALIPAY_RETURN_URL = 'http://www.meiduo.site:8000/payment/status/'
