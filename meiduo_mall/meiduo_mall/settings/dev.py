@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'carts',  # 购物车应用
     'orders',  # 订单应用
     'payment',  # 支付宝支付应用
+    'django_crontab',  # 定时任务
 ]
 
 MIDDLEWARE = [
@@ -318,3 +319,11 @@ ALIPAY_APPID = '2016100100637097'
 ALIPAY_DEBUG = True
 ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'
 ALIPAY_RETURN_URL = 'http://www.meiduo.site:8000/payment/status/'
+
+CRONJOBS = [
+    # 每1分钟生成一次首页静态文件
+    ('*/1 * * * *', 'contents.crons.generate_static_index_html',
+     '>> ' + os.path.join(os.path.dirname(BASE_DIR), 'logs/crontab.log'))
+]
+# 解决 crontab 中文问题
+CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
