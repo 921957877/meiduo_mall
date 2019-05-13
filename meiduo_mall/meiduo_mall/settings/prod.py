@@ -258,7 +258,7 @@ LOGIN_URL = '/login/'
 
 QQ_CLIENT_ID = '101518219'
 QQ_CLIENT_SECRET = '418d84ebdc7241efb79536886ae95224'
-QQ_REDIRECT_URI = 'http://www.meiduo.site:8000/oauth_callback'
+QQ_REDIRECT_URI = 'http://www.meiduo.site:80/oauth_callback'
 
 # 添加 django-cors-headers 的白名单, 使白名单中的 host 可以进行跨域请求
 CORS_ORIGIN_WHITELIST = (
@@ -297,7 +297,7 @@ EMAIL_HOST_PASSWORD = 'a13564574597'
 EMAIL_FROM = '美多商场<13917388741@163.com>'
 
 # 邮箱验证链接
-EMAIL_VERIFY_URL = 'http://www.meiduo.site:8000/emails/verification/'
+EMAIL_VERIFY_URL = 'http://www.meiduo.site/emails/verification/'
 
 # FDFS客户端的配置文件.
 FDFS_CLIENT_CONF = os.path.join(BASE_DIR, 'utils/fastdfs/client.conf')
@@ -326,7 +326,7 @@ HAYSTACK_SEARCH_RESULTS_PER_PAGE = 6
 ALIPAY_APPID = '2016100100637097'
 ALIPAY_DEBUG = True
 ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'
-ALIPAY_RETURN_URL = 'http://www.meiduo.site:8000/payment/status/'
+ALIPAY_RETURN_URL = 'http://www.meiduo.site/payment/status/'
 
 CRONJOBS = [
     # 每1分钟生成一次首页静态文件
