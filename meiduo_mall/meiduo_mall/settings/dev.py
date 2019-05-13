@@ -338,3 +338,6 @@ CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
 
 # 配置数据库读写路由
 DATABASE_ROUTERS = ['meiduo_mall.utils.db_router.MasterSlaveDBRouter']
+
+# 配置收集静态文件存放的目录
+STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static')
