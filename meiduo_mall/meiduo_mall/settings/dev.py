@@ -60,6 +60,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # 添加 django-cors-headers 的配置内容, 使其可以进行cors跨域,设在第一行,使其对所有视图生效
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -67,8 +69,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 添加 django-cors-headers 的配置内容, 使其可以进行cors跨域
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'meiduo_mall.urls'
@@ -118,14 +118,14 @@ DATABASES = {
         'PASSWORD': 'mysql',  # 数据库用户密码
         'NAME': 'meiduo_mall'  # 数据库名字
     },
-    'slave': {  # 从机(负责读)
-        'ENGINE': 'django.db.backends.mysql',  # 数据库引擎
-        'HOST': '127.0.0.1',  # 数据库主机
-        'PORT': 8306,  # 数据库端口
-        'USER': 'root',  # 数据库用户名
-        'PASSWORD': '123456',  # 数据库用户密码
-        'NAME': 'meiduo_mall'  # 数据库名字
-    }
+    # 'slave': {  # 从机(负责读)
+    #     'ENGINE': 'django.db.backends.mysql',  # 数据库引擎
+    #     'HOST': '127.0.0.1',  # 数据库主机
+    #     'PORT': 8306,  # 数据库端口
+    #     'USER': 'root',  # 数据库用户名
+    #     'PASSWORD': '123456',  # 数据库用户密码
+    #     'NAME': 'meiduo_mall'  # 数据库名字
+    # }
 }
 
 # Password validation
@@ -277,6 +277,7 @@ CORS_ORIGIN_WHITELIST = (
     'www.meiduo.site',
 
     '172.128.16.238:8001',
+    'api.meiduo.site:8080'
 )
 # 允许白名单中的 host 跨域请求时携带 cookie
 CORS_ALLOW_CREDENTIALS = True
@@ -337,7 +338,7 @@ CRONJOBS = [
 CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
 
 # 配置数据库读写路由
-DATABASE_ROUTERS = ['meiduo_mall.utils.db_router.MasterSlaveDBRouter']
+# DATABASE_ROUTERS = ['meiduo_mall.utils.db_router.MasterSlaveDBRouter']
 
 # 配置收集静态文件存放的目录
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static')
