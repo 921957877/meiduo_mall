@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
+import datetime
 import os
 import sys
 
@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'orders',  # 订单应用
     'payment',  # 支付宝支付应用
     'django_crontab',  # 定时任务
+    'meiduo_admin',  # 后台应用
 ]
 
 MIDDLEWARE = [
@@ -342,3 +343,19 @@ CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
 
 # 配置收集静态文件存放的目录
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static')
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+
+# JWT配置
+JWT_AUTH = {
+    # JWT_token有效期为一天
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+    # 指明一个函数,该函数返回的结果就是最终obtain_jwt_token返回的结果
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'meiduo_admin.utils.jwt_response.jwt_response_payload_handler'
+}

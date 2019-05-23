@@ -38,6 +38,10 @@ class UsernameMobileAuthBackend(ModelBackend):
         # 根据传入的username获取user对象
         # username可以是手机号也可以是账号
         user = get_user_by_account(username)
+        # 如果此次身份认证是后台站点登陆,则只允许超级管理员登陆
+        if request is None:
+            if user.is_staff != 1:
+                return None
         # 校验user是否存在并校验密码是否正确
         if user and user.check_password(password):
             return user
