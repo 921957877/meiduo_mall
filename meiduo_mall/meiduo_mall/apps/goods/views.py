@@ -27,7 +27,8 @@ class DetailVisitView(View):
             return http.HttpResponseForbidden('缺少必传参数')
         # 获取今天的日期
         # 获取时间对象
-        t = timezone.localtime()
+        # t = timezone.localtime()
+        t = datetime.datetime.now()
         # 根据时间对象拼接日期的字符串形式
         today_str = '%d-%02d-%02d' % (t.year, t.month, t.day)
         # 将字符串转为日期格式

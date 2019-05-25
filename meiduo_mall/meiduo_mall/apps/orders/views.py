@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from decimal import Decimal
 
 from django import http
@@ -95,7 +96,9 @@ class OrderCommitView(LoginRequiredJsonMixin, View):
         if pay_method not in [OrderInfo.PAY_METHODS_ENUM['CASH'], OrderInfo.PAY_METHODS_ENUM['ALIPAY']]:
             return http.HttpResponseForbidden('参数pay_method有误')
         # 生成订单编号:年月日时分秒+用户编号
-        order_id = timezone.localtime().strftime('%Y%m%d%H%M%S') + '%09d' % request.user.id
+        # order_id = timezone.localtime().strftime('%Y%m%d%H%M%S') + '%09d' % request.user.id
+        order_id = datetime.now().strftime('%Y%m%d%H%M%S') + '%09d' % request.user.id
+
         # 开启事务
         with transaction.atomic():
             # 创建事务保存点
