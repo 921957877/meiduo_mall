@@ -4,6 +4,7 @@ from users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """用户表序列化器"""
     class Meta:
         model = User
         fields = ['id', 'username', 'mobile', 'email', 'password']

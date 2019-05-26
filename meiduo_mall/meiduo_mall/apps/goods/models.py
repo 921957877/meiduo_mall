@@ -120,7 +120,7 @@ class SpecificationOption(BaseModel):
     规格具体选项表
     """
     # 这个规格选项表对应上面的哪个商品规格
-    spec = models.ForeignKey(GoodsSpecification, on_delete=models.CASCADE, verbose_name='规格')
+    spec = models.ForeignKey(GoodsSpecification, on_delete=models.CASCADE, related_name='options', verbose_name='规格')
     # 规格选项的内容
     value = models.CharField(max_length=20, verbose_name='选项值')
 
@@ -194,7 +194,7 @@ class SKUSpecification(BaseModel):
     SKU具体规格
     """
     # 对应的SKU值
-    sku = models.ForeignKey(SKU, on_delete=models.CASCADE, verbose_name='sku')
+    sku = models.ForeignKey(SKU, on_delete=models.CASCADE, related_name='specs', verbose_name='sku')
     # 对应哪一个规格
     spec = models.ForeignKey(GoodsSpecification, on_delete=models.PROTECT, verbose_name='规格名称')
     # 规格的具体内容

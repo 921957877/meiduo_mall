@@ -11,7 +11,7 @@ class UserView(ListCreateAPIView):
     serializer_class = UserSerializer
     pagination_class = MyPage
 
-    # # 重写get_queryset方法,根据前端是否传递keyword值返回不同查询结果
+    # 重写get_queryset方法,根据前端是否传递keyword值返回不同查询结果
     def get_queryset(self):
         keyword = self.request.query_params.get('keyword')
         if keyword:
