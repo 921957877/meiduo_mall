@@ -117,3 +117,4 @@ class GoodsDayVisitCountView(ListAPIView):
     now_date = date.today()
     queryset = GoodsVisitCount.objects.filter(date=now_date)
     serializer_class = GoodsVisitCountSerializer
+

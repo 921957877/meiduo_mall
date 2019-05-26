@@ -1,8 +1,9 @@
 from django.conf.urls import url
 from rest_framework_jwt.views import obtain_jwt_token
 
-from meiduo_admin.views.data_view import UserTotalCountView, UserDayCountView, UserDayActiveCountView, \
+from meiduo_admin.views.data_views import UserTotalCountView, UserDayCountView, UserDayActiveCountView, \
     UserDayOrderCountView, UserMonthCountView, GoodsDayVisitCountView
+from meiduo_admin.views.user_views import UserView
 
 urlpatterns = [
     url(r'^authorizations/$', obtain_jwt_token),  # JWT认证
@@ -12,4 +13,5 @@ urlpatterns = [
     url(r'^statistical/day_orders/$', UserDayOrderCountView.as_view()),  # 日下单用户统计
     url(r'^statistical/month_increment/$', UserMonthCountView.as_view()),  # 月增用户统计
     url(r'^statistical/goods_day_views/$', GoodsDayVisitCountView.as_view()),  # 日分类商品访问量统计
+    url(r'^users/$', UserView.as_view()),
 ]
